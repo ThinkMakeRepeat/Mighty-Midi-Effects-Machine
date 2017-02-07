@@ -160,8 +160,9 @@ void Menu() {
     u8x8.setInverseFont(1);
     u8x8.drawString(0, 2, "Bitcrusher");
   }
-  if (option =! 5){
-    u8x8.setInverseFont(0);    
+  if (option != 5){
+    u8x8.setInverseFont(0); 
+    u8x8.drawString(0, 2, "Bitcrusher");       
     }
   else {
     u8x8.setInverseFont(0);
