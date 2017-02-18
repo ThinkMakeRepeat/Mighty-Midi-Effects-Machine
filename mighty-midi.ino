@@ -10,6 +10,10 @@ U8X8_SSD1306_128X64_NONAME_SW_I2C u8x8(/* clock=*/ SCL, /* data=*/ SDA, /* reset
 #include <Bounce2.h>    // https://github.com/thomasfredericks/Bounce-Arduino-Wiring
 PushButton button0 = PushButton(0, ENABLE_INTERNAL_PULLUP);
 PushButton button1 = PushButton(1, ENABLE_INTERNAL_PULLUP);
+PushButton menu0 = PushButton(0, ENABLE_INTERNAL_PULLUP);
+PushButton menu1 = PushButton(1, ENABLE_INTERNAL_PULLUP);
+int a = 0;
+int menu = 0;
 //BitCrusher
 int current_CrushBits = 16; //this defaults to passthrough.
 int current_SampleRate = 44100; // this defaults to passthrough.
@@ -65,6 +69,9 @@ AudioControlSGTL5000     sgtl5000_1;     //xy=64.5,106.00000762939453
 
 void setup() {
   Serial.begin(9600);
+
+  pinMode(A8, INPUT_PULLUP); // sets analog pin for input
+
   button0.configureButton(configurePushButton);
   button1.configureButton(configurePushButton);
 
@@ -73,8 +80,7 @@ void setup() {
   button1.onPress(onButtonPressed);
   button0.onHoldRepeat(1000, 500, onButtonHeld);
   button1.onHoldRepeat(1000, 500, onButtonHeld);
-
-  u8x8.begin(/*Select=*/ 1, /*Right/Next=*/ 0, /*Left/Prev=*/ 3, /*Up=*/ A9, /*Down=*/ A8, /*Home/Cancel=*/ 1 && 0); // Arduboy 10 (Production)
+  u8x8.begin();
   u8x8.setFont(u8x8_font_pxplustandynewtv_f);
 
   StartUpScreen(); //Start up Logo and messaging, then defaults to Effects
@@ -104,73 +110,137 @@ elapsedMillis timeout = 0;
 bool mixer2_envelope = false;
 
 void loop() {
-  button0.update();
-  button1.update();
-  //usbMIDI.read();
-  // use the knobs to adjust parameters
-  float knob1 = (float)analogRead(A8) / 1023.0;
-  float knob2 = (float)analogRead(A9) / 1023.0;
+    button0.update();
+    button1.update();
+    //usbMIDI.read();
+  //StartUpScreen();
+  //u8x8.clear();
+
+
 }
+
 
 
 void StartUpScreen() {
-  u8x8.draw2x2String(1, 0, "Mighty");
-  delay(350);
-  u8x8.draw2x2String(1, 3, "MIDI");
-  delay(350);
-  u8x8.clear();
-  u8x8.setInverseFont(1);
-  u8x8.draw2x2String(1, 3, "Noise");
-  delay(350);
-  u8x8.clear();
-  u8x8.setInverseFont(1);
-  u8x8.draw2x2String(1, 3, "Maker");
-  delay(350);
-  u8x8.clear();
-  u8x8.draw2x2String(1, 1, "THINK");
-  delay(150);
-  u8x8.draw2x2String(1, 3, "MAKE");
-  delay(150);
-  u8x8.draw2x2String(1, 5, "REPEAT");
-  delay(150);
-  u8x8.clear();
-  u8x8.setInverseFont(0);
-  u8x8.draw2x2String(0, 0, "!!!!!!!!");
-  u8x8.draw2x2String(0, 2, "01010101");
-  u8x8.draw2x2String(0, 4, "!!!!!!!!");
-  u8x8.draw2x2String(0, 6, "01010101");
-  delay(100);
-  u8x8.clear();
-  Menu();
-
-  //Bitcrusher(showType);
-}
-void Menu() {
-  u8x8.clear();
-  int option;
-  option = map(analogRead(A8), 0, 1023, 0, 5);
-  u8x8.draw2x2String(0, 0, "MODE");
-  u8x8.drawString(0, 2, "Bitcrusher");
-  u8x8.drawString(0, 3, "Chorus");
-  u8x8.drawString(0, 4, "Reverb");
-  u8x8.drawString(0, 5, "ADSR");
-  u8x8.drawString(0, 6, "Echo");
-  u8x8.drawString(0, 7, "Delay");
-  if (option = 5) {
+  /*u8x8.draw2x2String(1, 0, "Mighty");
+    delay(350);
+    u8x8.draw2x2String(1, 3, "MIDI");
+    delay(350);
+    u8x8.clear();
     u8x8.setInverseFont(1);
-    u8x8.drawString(0, 2, "Bitcrusher");
-  }
-  if (option != 5){
-    u8x8.setInverseFont(0); 
-    u8x8.drawString(0, 2, "Bitcrusher");       
-    }
-  else {
+    u8x8.draw2x2String(1, 3, "Noise");
+    delay(350);
+    u8x8.clear();
+    u8x8.setInverseFont(1);
+    u8x8.draw2x2String(1, 3, "Maker");
+    delay(350);
+    u8x8.clear();
+    u8x8.draw2x2String(1, 1, "THINK");
+    delay(150);
+    u8x8.draw2x2String(1, 3, "MAKE");
+    delay(150);
+    u8x8.draw2x2String(1, 5, "REPEAT");
+    delay(150);
+    u8x8.clear();
     u8x8.setInverseFont(0);
-  }
-  //waveform1.frequency(360 * knob1 + 0.25);
-  //waveform2.frequency(360 * knob2 + 0.25);
+    u8x8.draw2x2String(0, 0, "!!!!!!!!");
+    u8x8.draw2x2String(0, 2, "01010101");
+    u8x8.draw2x2String(0, 4, "!!!!!!!!");
+    u8x8.draw2x2String(0, 6, "01010101");
+    delay(100);
+  */
 
 }
+
+void Menu() {
+
+  while (menu = 1) {
+    int mode, c = 0;
+
+    c = analogRead(A8); // get the analog value
+    if (c > 851)
+    {
+      mode = 0; //Bitcrusher
+      u8x8.draw2x2String(0, 0, "MODE");
+      u8x8.drawString(0, 2, ">Bitcrusher");
+      u8x8.drawString(0, 3, "Chorus ");
+      u8x8.drawString(0, 4, "Reverb");
+      u8x8.drawString(0, 5, "ADSR");
+      u8x8.drawString(0, 6, "Echo");
+      u8x8.drawString(0, 7, "Delay");
+
+    }
+    else if (c > 681 && c < 850)
+    {
+      mode = 1; //Chorus
+      u8x8.draw2x2String(0, 0, "MODE");
+      u8x8.drawString(0, 2, "Bitcrusher ");
+      u8x8.drawString(0, 3, ">Chorus");
+      u8x8.drawString(0, 4, "Reverb ");
+      u8x8.drawString(0, 5, "ADSR");
+      u8x8.drawString(0, 6, "Echo");
+      u8x8.drawString(0, 7, "Delay");
+
+    }
+    else if (c > 511 && c < 680)
+    {
+      mode = 2; //Reverb
+      u8x8.draw2x2String(0, 0, "MODE");
+      u8x8.drawString(0, 2, "Bitcrusher");
+      u8x8.drawString(0, 3, "Chorus ");
+      u8x8.drawString(0, 4, ">Reverb");
+      u8x8.drawString(0, 5, "ADSR ");
+      u8x8.drawString(0, 6, "Echo");
+      u8x8.drawString(0, 7, "Delay");
+
+    }
+    else if (c > 341 && c < 510)
+    {
+      mode = 3; //ADSR
+      u8x8.draw2x2String(0, 0, "MODE");
+      u8x8.drawString(0, 2, "Bitcrusher");
+      u8x8.drawString(0, 3, "Chorus");
+      u8x8.drawString(0, 4, "Reverb ");
+      u8x8.drawString(0, 5, ">ADSR");
+      u8x8.drawString(0, 6, "Echo ");
+      u8x8.drawString(0, 7, "Delay");
+
+
+    }
+    else if (c > 171 && c < 340)
+    {
+      mode = 4; //Echo
+      u8x8.draw2x2String(0, 0, "MODE");
+      u8x8.drawString(0, 2, "Bitcrusher");
+      u8x8.drawString(0, 3, "Chorus");
+      u8x8.drawString(0, 4, "Reverb");
+      u8x8.drawString(0, 5, "ADSR ");
+      u8x8.drawString(0, 6, ">Echo");
+      u8x8.drawString(0, 7, "Delay ");
+
+    }
+    else if (c < 170)
+    {
+      mode = 5; //DELAY
+      u8x8.draw2x2String(0, 0, "MODE");
+      u8x8.drawString(0, 2, "Bitcrusher ");
+      u8x8.drawString(0, 3, "Chorus");
+      u8x8.drawString(0, 4, "Reverb");
+      u8x8.drawString(0, 5, "ADSR");
+      u8x8.drawString(0, 6, "Echo ");
+      u8x8.drawString(0, 7, ">Delay");
+    }
+    char oled[5];
+    String str;
+    str = String(mode);
+    str.toCharArray(oled, 5);
+
+    //u8x8.draw2x2String(1, 0, oled);
+  }
+
+}
+
+
 // Use this function to configure the internal Bounce object to suit you. See the documentation at: https://github.com/thomasfredericks/Bounce2/wiki
 // This function can be left out if the defaults are acceptable - just don't call configureButton
 void configurePushButton(Bounce& bouncedButton) {
@@ -182,60 +252,19 @@ void configurePushButton(Bounce& bouncedButton) {
 // btn is a reference to the button that fired the event. That means you can use the same event handler for many buttons
 void onButtonPressed(Button& btn) {
   if (btn.is(button0)) {
+    menu = 0;
     u8x8.clear();
-    u8x8.drawString(0, 0, "Bitcrusher");
-    u8x8.drawString(0, 2, "Sample rate:");
-
-
-    if (current_CrushBits >= 2) { //eachtime you press it, deduct 1 bit from the settings.
-      current_CrushBits--;
-      char b[5];
-      String str;
-      str = String(current_CrushBits);
-      str.toCharArray(b, 5);
-      u8x8.draw2x2String(0, 5, b);
-      u8x8.drawString(4, 5, "bits");
-    } else {
-      current_CrushBits = 16; // if you get down to 1 go back to the top.
-    }
-
-    bitcrusher1.bits(current_CrushBits);
-    bitcrusher1.sampleRate(current_SampleRate);
-    Serial.print("Bitcrusher set to ");
-    Serial.print(current_CrushBits);
-    Serial.print(" Bit, Samplerate at ");
-    Serial.print(current_SampleRate);
-    Serial.println("Hz");
-    Serial.println("button pressed");
-    Serial.print("Button 1");
+    bitCrusherBits();
   } else if (btn.is(button1)) {
+    menu = 0;
     u8x8.clear();
-    u8x8.drawString(0, 0, "Bitcrusher");
-    u8x8.drawString(0, 2, "Sample rate:");
-    //Bitcrusher SampleRate // the lowest sensible setting is 345. There is a 128 sample buffer, and this will copy sample 1, to each of the other 127 samples.
-    if (current_SampleRate >= 690) { // 345 * 2, so we can do one more divide
-      current_SampleRate = current_SampleRate / 2; // half the sample rate each time
-      char c[5];
-      String str;
-      str = String(current_SampleRate);
-      str.toCharArray(c, 5);
-      u8x8.draw2x2String(0, 5, c);
-      u8x8.drawString(8, 5, "Hz");
-    } else {
-      current_SampleRate = 44100; // if you get down to the minimum then go back to the top and start over.
-    }
-
-    left_BitCrusher.bits(current_CrushBits);
-    left_BitCrusher.sampleRate(current_SampleRate);
-    right_BitCrusher.bits(current_CrushBits);
-    right_BitCrusher.sampleRate(current_SampleRate);
-    Serial.print("Bitcrusher set to ");
-    Serial.print(current_CrushBits);
-    Serial.print(" Bit, Samplerate at ");
-    Serial.print(current_SampleRate);
-    Serial.println("Hz");
-    Serial.print("Button 2");
-  } else {
+    BitcrusherHz();
+  } else if (btn.is(menu0)) {
+    Serial.print("Menu Button");
+  }else if (btn.is(menu1)) {
+    Serial.print("Menu 1 Button");
+  }
+  else {
     Serial.print("Hmmm, no button was");
   }
 
@@ -244,7 +273,7 @@ void onButtonPressed(Button& btn) {
 // duration reports back how long it has been since the button was originally pressed.
 // repeatCount tells us how many times this function has been called by this button.
 void onButtonHeld(Button& btn, uint16_t duration, uint16_t repeatCount) {
-  Menu();
+    Menu();
   Serial.print("button has been held for ");
   Serial.print(duration);
   Serial.print(" ms; this event has been fired ");
@@ -258,4 +287,48 @@ void onButtonReleased(Button& btn, uint16_t duration) {
   Serial.print("button released after ");
   Serial.print(duration);
   Serial.println(" ms");
+}
+
+void bitCrusherBits () {
+  u8x8.clear();
+  u8x8.drawString(0, 0, "Bitcrusher");
+  u8x8.drawString(0, 2, "Sample rate:");
+
+
+  if (current_CrushBits >= 2) { //eachtime you press it, deduct 1 bit from the settings.
+    current_CrushBits--;
+    char b[5];
+    String str;
+    str = String(current_CrushBits);
+    str.toCharArray(b, 5);
+    u8x8.draw2x2String(0, 5, b);
+    u8x8.drawString(4, 5, "bits");
+  } else {
+    current_CrushBits = 16; // if you get down to 1 go back to the top.
+  }
+  left_BitCrusher.bits(current_CrushBits);
+  right_BitCrusher.bits(current_CrushBits);
+
+  Serial.print("Bitcrusher set to ");
+  Serial.print(current_CrushBits);
+}
+void BitcrusherHz() {
+  u8x8.clear();
+  u8x8.drawString(0, 0, "Bitcrusher");
+  u8x8.drawString(0, 2, "Sample rate:");
+  //Bitcrusher SampleRate // the lowest sensible setting is 345. There is a 128 sample buffer, and this will copy sample 1, to each of the other 127 samples.
+  if (current_SampleRate >= 690) { // 345 * 2, so we can do one more divide
+    current_SampleRate = current_SampleRate / 2; // half the sample rate each time
+    char c[5];
+    String str;
+    str = String(current_SampleRate);
+    str.toCharArray(c, 5);
+    u8x8.draw2x2String(0, 5, c);
+    u8x8.drawString(8, 5, "Hz");
+  }
+  left_BitCrusher.sampleRate(current_SampleRate);
+  right_BitCrusher.sampleRate(current_SampleRate);
+  Serial.print(" Bit, Samplerate at ");
+  Serial.print(current_SampleRate);
+  Serial.println("Hz");
 }
